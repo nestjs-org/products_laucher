@@ -55,3 +55,19 @@ services:
       - POSTGRES_DATABASE=ordersdb
     volumes:
       - ./orders-ms/postgres:/var/lib/postgresql/data
+
+  payment-ms:
+    build: ./payment-ms
+    ports:
+      - 3004:3004
+    command: npm run start:dev
+    environment:
+      - PORT=${PORT}
+      - API_KEY_STRIPE=${API_KEY_STRIPE}
+      - CANCEL_URL=${CANCEL_URL}
+      - SUCCESS_URL=${$SUCCESS_URL}
+      - SECRET_ENDPOINT_WEBHOOK_KEY=${SECRET_ENDPOINT_WEBHOOK_KEY}
+      - NATS_SERVERS=nats://nats-server:4222
+    volumes:
+      - ./payment-ms/src:/usr/src/app/src
+    
