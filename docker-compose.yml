@@ -29,19 +29,6 @@ services:
       - NATS_SERVERS=nats://nats-server:4222
       - DATABASE_URL=file:./dev.db
 
-  orders-ms:
-    build: ./orders-ms
-    depends_on: 
-      - postgres-orders-ms-db
-    ports:
-       - "3002:3002"
-    volumes:
-      - ./orders-ms/src:/usr/src/app/src
-    command: npm run start:dev
-    environment:
-      - PORT=3002
-      - NATS_SERVERS=nats://nats-server:4222
-      - DATABASE_URL=postgresql://postgres:12345@postgres-orders-ms-db:5432/ordersdb
 
   postgres-orders-ms-db:
     container_name: postgresdb-orders-ms
@@ -56,16 +43,31 @@ services:
     volumes:
       - ./orders-ms/postgres:/var/lib/postgresql/data
 
+  orders-ms:
+    build: ./orders-ms
+    depends_on: 
+      - postgres-orders-ms-db
+    ports:
+       - "3002:3002"
+    volumes:
+      - ./orders-ms/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - PORT=3002
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL=postgresql://postgres:12345@postgres-orders-ms-db:5432/ordersdb
+
   payment-ms:
     build: ./payment-ms
     ports:
       - 3004:3004
     command: npm run start:dev
+    env_file: ./payment-ms/.env
     environment:
       - PORT=${PORT}
       - API_KEY_STRIPE=${API_KEY_STRIPE}
       - CANCEL_URL=${CANCEL_URL}
-      - SUCCESS_URL=${$SUCCESS_URL}
+      - SUCCESS_URL=${SUCCESS_URL}
       - SECRET_ENDPOINT_WEBHOOK_KEY=${SECRET_ENDPOINT_WEBHOOK_KEY}
       - NATS_SERVERS=nats://nats-server:4222
     volumes:
