@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+  nats-server:
+    image: nats:2.10.25-alpine3.21
+
+  client-gateway:
+    build: 
+      context: ./client-gateway
+      dockerfile: dockerfile.prod
+    ports:
+      - "3000:3000"
+    image: us-east4-docker.pkg.dev/microservices-curso-452723/repositorio-google-image-registry/client-gateway
+    environment:
+      - PORT=3000
+      - NATS_SERVERS=nats://nats-server:4222
+  auth-ms:
+    build: 
+      context: ./auth-ms
+      dockerfile: dockerfile.prod
+    image: us-east4-docker.pkg.dev/microservices-curso-452723/repositorio-google-image-registry/auth-ms
+    environment:
+      - PORT=3000
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL=${AUTH_MS_MONGO_DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+
+  products-ms:
+    build: 
+      context: ./products-ms
+      dockerfile: dockerfile.prod
+    image: us-east4-docker.pkg.dev/microservices-curso-452723/repositorio-google-image-registry/products-ms
+    environment:
+      - PORT=3000
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL=file:./dev.db
+
+  orders-ms:
+    build: 
+      context: ./orders-ms
+      dockerfile: dockerfile.prod
+      args:
+        - URL_DATABASE_ARGUMENT=${ORDERS_MS_NEON_DATABASE_URL}
+    image: us-east4-docker.pkg.dev/microservices-curso-452723/repositorio-google-image-registry/orders-ms
+    environment:
+      - PORT=3000
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL=${ORDERS_MS_NEON_DATABASE_URL}
+  
+  payment-ms:
+    build: 
+      context: ./payment-ms
+      dockerfile: dockerfile.prod
+    image: us-east4-docker.pkg.dev/microservices-curso-452723/repositorio-google-image-registry/payment-ms
+    environment:
+      - PORT=3000
+      - API_KEY_STRIPE=${API_KEY_STRIPE}
+      - CANCEL_URL=${CANCEL_URL}
+      - SUCCESS_URL=${SUCCESS_URL}
+      - SECRET_ENDPOINT_WEBHOOK_KEY=${SECRET_ENDPOINT_STRIPE_WEBHOOK_KEY}
+      - NATS_SERVERS=nats://nats-server:4222
